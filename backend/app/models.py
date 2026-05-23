@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, ForeignKey, Text, CheckConstraint, UniqueConstraint
+from sqlalchemy import String, ForeignKey, Text, CheckConstraint, UniqueConstraint, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -15,6 +15,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
 
@@ -34,6 +35,7 @@ class Room(Base):
         UUID(as_uuid=True), ForeignKey("users.id")
     )
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
 
@@ -52,6 +54,7 @@ class RoomMember(Base):
         UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
     )
     joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
 
@@ -73,6 +76,7 @@ class Message(Base):
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
 
@@ -94,5 +98,6 @@ class MessageReceipt(Base):
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )

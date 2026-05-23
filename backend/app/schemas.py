@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 
 
-class UserRegistration(BaseModel):
+class UserRegister(BaseModel):
     username: str
     email: EmailStr
     password: str
