@@ -1,10 +1,16 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from app.auth.router import router as auth_router
+from app.routers.rooms import router as rooms_router
+from app.routers.users import router as users_router
+from app.routers.dms import router as dms_router
 
 app = FastAPI(title="Chat System")
 
 app.include_router(auth_router)
+app.include_router(rooms_router)
+app.include_router(users_router)
+app.include_router(dms_router)
 
 def custom_openapi():
     if app.openapi_schema:

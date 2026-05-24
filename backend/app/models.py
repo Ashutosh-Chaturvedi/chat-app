@@ -4,6 +4,7 @@ from sqlalchemy import String, ForeignKey, Text, CheckConstraint, UniqueConstrai
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
+from app.utils import generate_room_code 
 
 class User(Base):
     __tablename__ = "users"
@@ -31,6 +32,14 @@ class Room(Base):
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     is_direct: Mapped[bool] = mapped_column(default=False)
+    
+    code: Mapped[str] = mapped_column(
+        String(10), 
+        nullable=False, 
+        unique=True, 
+        default=generate_room_code
+    )
+    
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id")
     )
