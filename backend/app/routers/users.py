@@ -11,6 +11,15 @@ from app.models import User
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+@router.get("/", response_model=list[UserOut])
+async def get_all_users(
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await r_serve.get_all_users(db, limit, offset)
+
 @router.get("/me/rooms", response_model=list[RoomOut])
 async def list_my_rooms(
     db: AsyncSession = Depends(get_db),

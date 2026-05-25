@@ -4,6 +4,10 @@ from sqlalchemy import select, asc
 from sqlalchemy.orm import selectinload
 import uuid
 
+async def get_all_users(db: AsyncSession, limit: int = 50, offset: int = 0):
+    users = await db.execute(select(User).limit(limit).offset(offset))
+    return users.scalars().all()
+
 async def create_room(db: AsyncSession, name: str, user: User) -> Room:
     room = Room(
         name=name,
@@ -70,5 +74,43 @@ async def get_user_rooms(db: AsyncSession, user: User) -> list[Room]:
     user_rooms = list(result.scalars().all())
     
     return user_rooms
+
+async def get_dm_room(db: AsyncSession, user1_id: uuid.UUID, user2_id: uuid.UUID):
+    user1_rooms = select(RoomMember.room_id).where(RoomMember.user_id == user1_id)
+
+    user2_rooms = select(RoomMember.room_id).where(RoomMember.user_id == user2_id)
+
+    result = await db.execute(
+        select(Room).where(
+            Room.is_direct == True,
+            Room.id.in_(user1_rooms),
+            Room.id.in_(user2_rooms)
+        )
+    )
+    return result.scalar_one_or_none()
+
+async def initiate_dm(db: AsyncSession, receiver: User, user: User) -> Room:
+    
+    existing = await get_dm_room(db, receiver.id, user.id)
+    
+    if existing: 
+        return existing
+    
+    room = Room(
+        name=receiver.username,
+        is_direct=True, 
+        created_by=user.id,
+    )
+    
+    room_member = RoomMember(user_id=user.id)
+    room_member_receiver = RoomMember(user_id=receiver.id)
+    room.members.append(room_member_receiver)
+    room.members.append(room_member)
+    
+    db.add(room)
+    await db.commit()
+    await db.refresh(room)
+    return room
+
     
 
