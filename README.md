@@ -20,10 +20,41 @@ online presence, and delivery receipts.
 ## Project Status
 
 - [x] Phase 1 — Auth (register, login, refresh, protected routes)
-- [ ] Phase 2 — Rooms and REST messaging
+- [x] Phase 2 — Rooms, messaging, DMs
 - [ ] Phase 3 — WebSocket real-time delivery
 - [ ] Phase 4 — Presence
 - [ ] Phase 5 — Delivery receipts
+
+## API Endpoints
+
+### Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /auth/register | Register a new user |
+| POST | /auth/login | Login, get token pair |
+| POST | /auth/refresh | Refresh access token |
+| GET | /auth/me | Get current user |
+
+### Rooms
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /rooms/ | Create a group room |
+| POST | /rooms/{room_code}/members | Join a room by code |
+| POST | /rooms/{room_id}/messages | Send a message |
+| GET | /rooms/{room_id}/messages | Fetch message history |
+
+### Users
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /users/ | List all users |
+| GET | /users/me/rooms | List my rooms |
+| GET | /users/{user_id} | Get user details |
+
+### DMs
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /dms/{user_id} | Initiate or get DM |
+| GET | /dms/{user_id}/messages | Fetch DM history |
 
 ## Running locally
 
@@ -41,3 +72,6 @@ API docs at `http://localhost:8000/docs`
 - Timezone-aware timestamps throughout (`TIMESTAMPTZ`)
 - Password pre-hashed with SHA-256 before bcrypt — avoids 72-byte truncation
 - Refresh tokens are the revocation point — access tokens are short-lived (15min)
+- DMs modeled as rooms with `is_direct=True` — unified message storage, no duplicate logic
+- Room join codes — 6 character alphanumeric, auto-generated on room creation
+- Offset pagination on user listing — limit/offset with default limit of 50
