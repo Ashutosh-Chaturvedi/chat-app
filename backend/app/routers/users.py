@@ -4,7 +4,8 @@ import uuid
 
 from app.database import get_db
 from app.schemas import RoomCreate, RoomOut, MessageCreate, MessageOut, UserOut
-from app.auth import service
+from app.auth import service as a_serve
+from app.routers import service as r_serve
 from app.auth.dependencies import get_current_user
 from app.models import User
 
@@ -15,7 +16,7 @@ async def list_my_rooms(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)  
 ):
-    pass
+    return await r_serve.get_user_rooms(db, current_user)
 
 @router.get("/{user_id}", response_model=UserOut)
 async def get_user_detail(
@@ -23,4 +24,7 @@ async def get_user_detail(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)  
 ):
-    pass
+    user = await a_serve.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
