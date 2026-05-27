@@ -8,6 +8,8 @@ from app.auth import service as a_serve
 from app.routers import service as r_serve
 from app.auth.dependencies import get_current_user
 from app.models import User
+from app.presence import is_online
+from app.redis import get_redis
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -37,3 +39,14 @@ async def get_user_detail(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@router.get("/{user_id}/presence")
+async def get_presence(
+    user_id: uuid.UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    redis = await get_redis()
+    online = await is_online(redis, user_id)
+    await redis.aclose()
+    return {"user_id": str(user_id), "online": bool(online)}

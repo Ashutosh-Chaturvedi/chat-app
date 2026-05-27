@@ -6,12 +6,12 @@ from sqlalchemy import select
 from app.models import RoomMember, Message
 import json
 
-
 from app.websockets import manager
 from app.database import get_db
 from app.auth.service import decode_token, get_user_by_id
 from app.routers.service import send_message
-
+from app.presence import set_online, set_offline
+from app.redis import get_redis
 
 router = APIRouter(prefix="/ws", tags=["ws"])
 
@@ -43,18 +43,28 @@ async def websocket_endpoint(
         return
     
     await manager.connect(room_id, websocket)
+    redis = await get_redis()
+    await set_online(redis, user.id)
     try:
         while True:
             data = await websocket.receive_text()
             
-            message = await send_message(db, room_id, user, data)
-            
-            await manager.broadcast(room_id, json.dumps({
-                "id": str(message.id),
-                "sender_id": str(message.sender_id),
-                "content": message.content,
-                "created_at": message.created_at.isoformat()
-            }))
+            if data == "ping":
+                await set_online(redis, user.id)
+                await websocket.send_text("pong")
+            else: 
+                message = await send_message(db, room_id, user, data)
+                
+                await manager.broadcast(room_id, json.dumps({
+                    "id": str(message.id),
+                    "sender_id": str(message.sender_id),
+                    "content": message.content,
+                    "created_at": message.created_at.isoformat()
+                }))
     except Exception:
+        pass
+    finally:
         manager.disconnect(room_id, websocket)
+        await set_offline(redis, user.id)
+        await redis.aclose()
 
