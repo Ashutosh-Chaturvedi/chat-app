@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import Room, RoomMember, User, Message
+from app.models import Room, RoomMember, User, Message, MessageReceipt
 from sqlalchemy import select, asc
 from sqlalchemy.orm import selectinload
 import uuid
@@ -112,5 +112,20 @@ async def initiate_dm(db: AsyncSession, receiver: User, user: User) -> Room:
     await db.refresh(room)
     return room
 
+async def create_receipts(db: AsyncSession, message: Message, sender: User, room_id: uuid.UUID):
+    
+    result = await db.execute(select(RoomMember).where(RoomMember.room_id == room_id))
+    members = result.scalars().all()
+    
+    for member in members:
+        if member.user_id != sender.id:
+            receipt = MessageReceipt(
+                message_id=message.id,
+                user_id=member.user_id,
+                status="delivered"
+            )
+            db.add(receipt)        
+
+    await db.commit()
     
 

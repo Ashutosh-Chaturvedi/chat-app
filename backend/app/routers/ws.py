@@ -9,7 +9,7 @@ import json
 from app.websockets import manager
 from app.database import get_db
 from app.auth.service import decode_token, get_user_by_id
-from app.routers.service import send_message
+from app.routers.service import send_message, create_receipts
 from app.presence import set_online, set_offline
 from app.redis import get_redis
 
@@ -54,7 +54,7 @@ async def websocket_endpoint(
                 await websocket.send_text("pong")
             else: 
                 message = await send_message(db, room_id, user, data)
-                
+                await create_receipts(db, message, user, room_id)
                 await manager.broadcast(room_id, json.dumps({
                     "id": str(message.id),
                     "sender_id": str(message.sender_id),
