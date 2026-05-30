@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Room, RoomMember, User, Message, MessageReceipt
-from sqlalchemy import select, asc
+from sqlalchemy import select, asc, update 
 from sqlalchemy.orm import selectinload
 import uuid
 
@@ -65,6 +65,17 @@ async def get_room_message(db: AsyncSession, room_id: uuid.UUID, user: User) -> 
     result = await db.execute(select(Message).where(Message.room_id == room_id).order_by(asc(Message.created_at)))
     
     room_messages = list(result.scalars().all())
+    
+    await db.execute(
+        update(MessageReceipt)
+        .where(
+            MessageReceipt.user_id == user.id, 
+            MessageReceipt.status == "delivered", 
+            MessageReceipt.message_id.in_([m.id for m in room_messages])
+        )
+        .values(status="read")
+    )
+    await db.commit()
     
     return room_messages
 

@@ -32,23 +32,23 @@ async def join_room(
         raise HTTPException(status_code=404, detail="Room not found")
     return room
 
-@router.post("/{room_id}/messages", response_model=MessageOut)
-async def send_message(
-    payload: MessageCreate, 
-    room_id: uuid.UUID, 
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)       
-):  
-    result = await db.execute(
-        select(RoomMember).where(
-            RoomMember.room_id == room_id,
-            RoomMember.user_id == current_user.id
-        )
-    )
-    member = result.scalar_one_or_none()
-    if not member:
-        raise HTTPException(status_code=403, detail="Not a member of this room")
-    return await service.send_message(db, room_id, current_user, payload.content)
+# @router.post("/{room_id}/messages", response_model=MessageOut)
+# async def send_message(
+#     payload: MessageCreate, 
+#     room_id: uuid.UUID, 
+#     db: AsyncSession = Depends(get_db),
+#     current_user: User = Depends(get_current_user)       
+# ):  
+#     result = await db.execute(
+#         select(RoomMember).where(
+#             RoomMember.room_id == room_id,
+#             RoomMember.user_id == current_user.id
+#         )
+#     )
+#     member = result.scalar_one_or_none()
+#     if not member:
+#         raise HTTPException(status_code=403, detail="Not a member of this room")
+#     return await service.send_message(db, room_id, current_user, payload.content)
 
 @router.get("/{room_id}/messages", response_model=list[MessageOut])
 async def get_room_messages(
