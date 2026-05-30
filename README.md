@@ -23,7 +23,11 @@ online presence, and delivery receipts.
 - [x] Phase 2 — Rooms, messaging, DMs
 - [x] Phase 3 — WebSocket real-time messaging
 - [x] Phase 4 — Presence with Redis TTL and heartbeat
-- [ ] Phase 5 — Delivery receipts
+- [x] Phase 5 — Delivery receipts
+- [ ] Phase 6 — Frontend auth UI
+- [ ] Phase 7 — Room list, create room, join by code
+- [ ] Phase 8 — Chat UI with real-time WebSocket messages
+- [ ] Phase 9 — DMs, presence indicators, delivery receipts UI
 
 ## API Endpoints
 
@@ -40,7 +44,6 @@ online presence, and delivery receipts.
 |--------|----------|-------------|
 | POST | /rooms/ | Create a group room |
 | POST | /rooms/{room_code}/members | Join a room by code |
-| POST | /rooms/{room_id}/messages | Send a message |
 | GET | /rooms/{room_id}/messages | Fetch message history |
 
 ### Users
@@ -65,14 +68,10 @@ online presence, and delivery receipts.
 #### WebSocket message format
 
 **Send a message:**
-```json
 "hello world"
-```
 
 **Send a heartbeat:**
-```json
 "ping"
-```
 
 **Receive a message:**
 ```json
@@ -83,6 +82,16 @@ online presence, and delivery receipts.
   "created_at": "2026-05-26T19:51:40.718544+00:00"
 }
 ```
+
+**Receive a heartbeat response:**
+"pong"
+
+## WebSocket close codes
+
+| Code | Meaning |
+|------|---------|
+| 4001 | Unauthorized — invalid or expired token |
+| 4003 | Forbidden — not a member of this room |
 
 ## Running locally
 
@@ -107,6 +116,34 @@ API docs at `http://localhost:8000/docs`
 
 Copy `.env.example` to `.env` and fill in values.
 
+## Project structure
+backend/
+├── app/
+│   ├── main.py              # app entrypoint, router mounts
+│   ├── config.py            # pydantic settings, env vars
+│   ├── database.py          # async engine, session factory
+│   ├── models.py            # SQLAlchemy ORM models
+│   ├── schemas.py           # Pydantic request/response models
+│   ├── utils.py             # room code generator
+│   ├── websockets.py        # connection manager
+│   ├── presence.py          # Redis presence functions
+│   ├── redis.py             # Redis client factory
+│   ├── auth/
+│   │   ├── router.py        # /auth endpoints
+│   │   ├── service.py       # JWT, bcrypt, user queries
+│   │   └── dependencies.py  # get_current_user dependency
+│   └── routers/
+│       ├── rooms.py         # /rooms endpoints
+│       ├── users.py         # /users endpoints
+│       ├── dms.py           # /dms endpoints
+│       ├── ws.py            # WebSocket endpoint
+│       └── service.py       # shared database operations
+├── migrations/              # Alembic schema versions
+├── tests/
+├── docker-compose.yml       # PostgreSQL + Redis
+├── requirements.txt
+└── .env.example
+
 ## Design decisions
 
 - UUIDs as primary keys — no sequential ID leakage
@@ -117,4 +154,6 @@ Copy `.env.example` to `.env` and fill in values.
 - Room join codes — 6 character alphanumeric, auto-generated on room creation
 - Offset pagination on user listing — limit/offset with default limit of 50
 - Presence via Redis TTL — heartbeat every 30s, TTL of 90s, no background cleanup needed
-- WebSocket connection manager — in-memory registry, sufficient for single server instance
+- WebSocket only for sending messages — REST is read-only for message history
+- In-memory connection manager — sufficient for single server, Redis Pub/Sub needed for horizontal scaling
+- Delivery receipts — created on WebSocket broadcast, marked read on history fetch
