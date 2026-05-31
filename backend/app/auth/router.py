@@ -6,12 +6,15 @@ from app.schemas import UserRegister, UserLogin, UserOut, TokenPair, RefreshRequ
 from app.auth import service
 from app.auth.dependencies import get_current_user
 from app.models import User
+from app.limiter import limiter
+from fastapi import Request
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
-async def register(payload: UserRegister, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, payload: UserRegister, db: AsyncSession = Depends(get_db)):
     existing = await service.get_user_by_email(db, payload.email)
     if existing:
         raise HTTPException(
@@ -23,7 +26,8 @@ async def register(payload: UserRegister, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenPair)
-async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def login(request: Request, payload: UserLogin, db: AsyncSession = Depends(get_db)):
     user = await service.authenticate_user(db, payload.email, payload.password)
     if not user:
         raise HTTPException(

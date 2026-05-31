@@ -12,8 +12,10 @@ from app.auth.service import decode_token, get_user_by_id
 from app.routers.service import send_message, create_receipts
 from app.presence import set_online, set_offline
 from app.redis import get_redis
+from app.logger import get_logger
 
 router = APIRouter(prefix="/ws", tags=["ws"])
+logger = get_logger(__name__)
 
 @router.websocket("/{room_id}")
 async def websocket_endpoint(
@@ -45,6 +47,7 @@ async def websocket_endpoint(
     await manager.connect(room_id, websocket)
     redis = await get_redis()
     await set_online(redis, user.id)
+    logger.info(f"User {user.id} connected to room {room_id}")
     try:
         while True:
             data = await websocket.receive_text()
@@ -67,4 +70,5 @@ async def websocket_endpoint(
         manager.disconnect(room_id, websocket)
         await set_offline(redis, user.id)
         await redis.aclose()
+        logger.info(f"User {user.id} disconnected from room {room_id}")
 

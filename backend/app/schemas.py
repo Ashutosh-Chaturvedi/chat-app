@@ -1,9 +1,9 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 import uuid
 from datetime import datetime
 
 class RoomCreate(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     
 class RoomOut(BaseModel): 
     id: uuid.UUID
@@ -15,7 +15,7 @@ class RoomOut(BaseModel):
     model_config = {"from_attributes": True}
     
 class MessageCreate(BaseModel): 
-    content: str
+    content: str = Field(min_length=1, max_length=4000)
     
 class MessageOut(BaseModel): 
     id: uuid.UUID
@@ -26,9 +26,9 @@ class MessageOut(BaseModel):
     model_config = {"from_attributes": True}
 
 class UserRegister(BaseModel):
-    username: str
+    username: str = Field(min_length=3, max_length=50)
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8, max_length=100)
     
 
 class UserLogin(BaseModel):
