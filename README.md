@@ -117,6 +117,7 @@ API docs at `http://localhost:8000/docs`
 Copy `.env.example` to `.env` and fill in values.
 
 ## Project structure
+```
 backend/
 ├── app/
 │   ├── main.py              # app entrypoint, router mounts
@@ -143,7 +144,7 @@ backend/
 ├── docker-compose.yml       # PostgreSQL + Redis
 ├── requirements.txt
 └── .env.example
-
+```
 ## Design decisions
 
 - UUIDs as primary keys — no sequential ID leakage
