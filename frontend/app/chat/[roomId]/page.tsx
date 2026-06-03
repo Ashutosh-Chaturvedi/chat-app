@@ -13,8 +13,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [connected, setConnected] = useState(false);
-  const wsRef = useRef(null);
-  const bottomRef = useRef(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [roomName, setRoomName] = useState("");
 

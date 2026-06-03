@@ -61,6 +61,7 @@ async def websocket_endpoint(
                 await manager.broadcast(room_id, json.dumps({
                     "id": str(message.id),
                     "sender_id": str(message.sender_id),
+                    "sender_username": user.username,
                     "content": message.content,
                     "created_at": message.created_at.isoformat()
                 }))

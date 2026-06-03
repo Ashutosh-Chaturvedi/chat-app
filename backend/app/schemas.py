@@ -21,9 +21,8 @@ class MessageOut(BaseModel):
     id: uuid.UUID
     content: str
     sender_id: uuid.UUID
+    sender_username: str
     created_at: datetime
-    
-    model_config = {"from_attributes": True}
 
 class UserRegister(BaseModel):
     username: str = Field(min_length=3, max_length=50)

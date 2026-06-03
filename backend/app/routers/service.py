@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Room, RoomMember, User, Message, MessageReceipt
 from sqlalchemy import select, asc, update 
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased
 import uuid
 
 async def get_all_users(db: AsyncSession, limit: int = 50, offset: int = 0):
@@ -61,23 +62,41 @@ async def send_message(db: AsyncSession, room_id: uuid.UUID, sender: User, conte
 
     return message
 
-async def get_room_message(db: AsyncSession, room_id: uuid.UUID, user: User) -> list[Message]:
-    result = await db.execute(select(Message).where(Message.room_id == room_id).order_by(asc(Message.created_at)))
+
+async def get_room_message(db: AsyncSession, room_id: uuid.UUID, user: User) -> list:
+    result = await db.execute(
+        select(Message, User.username)
+        .join(User, Message.sender_id == User.id)
+        .where(Message.room_id == room_id)
+        .order_by(asc(Message.created_at))
+    )
+    rows = result.all()
     
-    room_messages = list(result.scalars().all())
-    
+    messages = [row[0] for row in rows]
     await db.execute(
         update(MessageReceipt)
         .where(
-            MessageReceipt.user_id == user.id, 
-            MessageReceipt.status == "delivered", 
-            MessageReceipt.message_id.in_([m.id for m in room_messages])
+            MessageReceipt.user_id == user.id,
+            MessageReceipt.status == "delivered",
+            MessageReceipt.message_id.in_([m.id for m in messages])
         )
         .values(status="read")
     )
     await db.commit()
     
-    return room_messages
+    result_list = []
+    for row in rows:
+        message = row[0]
+        username = row[1]
+        result_list.append({
+            "id": message.id,
+            "content": message.content,
+            "sender_id": message.sender_id,
+            "sender_username": username,
+            "created_at": message.created_at,
+        })
+
+    return result_list
 
 async def get_user_rooms(db: AsyncSession, user: User) -> list[Room]: 
     result = await db.execute(select(Room).join(RoomMember).where(RoomMember.user_id == user.id))
