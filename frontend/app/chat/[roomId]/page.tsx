@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { API_URL } from "../../lib/api";
+import { API_URL, WS_URL } from "../../lib/api";
 import { getToken, isAuthenticated } from "../../lib/auth";
 
 export default function ChatPage() {
@@ -72,7 +72,7 @@ export default function ChatPage() {
 
   const connectWebSocket = () => {
     const token = getToken();
-    const wsUrl = `ws://localhost:8000/ws/${roomId}?token=${token}`;
+    const wsUrl = `${WS_URL}/ws/${roomId}?token=${token}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
