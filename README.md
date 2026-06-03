@@ -9,7 +9,7 @@ Frontend: `http://143.110.244.61`
 Backend API: `http://143.110.244.61/api`
 
 ## Architecture
-
+```
 Internet
 ↓
 Nginx (port 80) — reverse proxy
@@ -19,6 +19,7 @@ Nginx (port 80) — reverse proxy
 ↓
 PostgreSQL (Docker) — persistent storage
 Redis (Docker) — presence and caching
+```
 
 - **Transport**: REST (auth, history) + WebSocket (real-time events)
 - **Auth**: JWT-based stateless auth with access/refresh token pair
