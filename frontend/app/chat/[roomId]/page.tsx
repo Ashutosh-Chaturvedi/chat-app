@@ -83,7 +83,7 @@ export default function ChatPage() {
           ws.send("ping");
         }
       }, 30000);
-      heartbeat.current = heartbeat; 
+      heartbeatRef.current = heartbeat; 
     };
 
     ws.onmessage = (event) => {
