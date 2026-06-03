@@ -95,14 +95,14 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition-colors"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing up..." : "Sign up"}
           </button>
         </form>
 
         <p className="text-gray-400 text-sm mt-6 text-center">
-          Don't have an account?{" "}
+          Have an account?{" "}
           <a href="/register" className="text-violet-400 hover:underline">
-            Register
+            Login
           </a>
         </p>
       </div>
