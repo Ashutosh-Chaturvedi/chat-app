@@ -104,7 +104,7 @@ export default function ChatPage() {
     wsRef.current = ws;
   };
 
-  const sendMessage = (e) => {
+  const sendMessage = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!input.trim() || !wsRef.current) return;
     if (wsRef.current.readyState !== WebSocket.OPEN) return;

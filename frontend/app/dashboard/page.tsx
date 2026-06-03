@@ -40,7 +40,7 @@ export default function DashboardPage() {
     }
   };
 
-  const createRoom = async (e) => {
+  const createRoom = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!roomName.trim()) return;
 
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     }
   };
 
-  const joinRoom = async (e) => {
+  const joinRoom = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
 
