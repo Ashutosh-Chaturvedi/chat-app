@@ -1,33 +1,102 @@
 # Chat System
 
-A real-time chat backend built with FastAPI, PostgreSQL, and Redis.
-Supports direct messaging and group rooms with message persistence,
-online presence, and delivery receipts.
+A full-stack real-time chat application built with FastAPI, PostgreSQL, Redis, and Next.js.
+Supports direct messaging and group rooms with message persistence, online presence, and delivery receipts.
+
+## Live Demo
+
+Frontend: `http://143.110.244.61`
+Backend API: `http://143.110.244.61/api`
 
 ## Architecture
+
+Internet
+↓
+Nginx (port 80) — reverse proxy
+├── Frontend (Next.js, port 3000)
+├── Backend API (FastAPI, port 8000)
+└── WebSocket (FastAPI, port 8000)
+↓
+PostgreSQL (Docker) — persistent storage
+Redis (Docker) — presence and caching
 
 - **Transport**: REST (auth, history) + WebSocket (real-time events)
 - **Auth**: JWT-based stateless auth with access/refresh token pair
 - **Storage**: PostgreSQL for persistence, Redis for presence and sessions
 - **Schema**: DMs modeled as rooms with 2 members — unified message storage
+- **Deployment**: DigitalOcean Droplet, Ubuntu 24.04, systemd process management
 
 ## Stack
 
-- Python 3.11+, FastAPI, SQLAlchemy (async), Alembic
+### Backend
+- Python 3.12, FastAPI, SQLAlchemy (async), Alembic
 - PostgreSQL 16, Redis 7
-- Docker Compose for local infrastructure
+- Docker Compose for infrastructure
+- Nginx as reverse proxy
+- systemd for process management
 
-## Project Status
+### Frontend
+- Next.js 15, React, Tailwind CSS
+- Native WebSocket API
+- localStorage for token management
 
-- [x] Phase 1 — Auth (register, login, refresh, protected routes)
-- [x] Phase 2 — Rooms, messaging, DMs
-- [x] Phase 3 — WebSocket real-time messaging
-- [x] Phase 4 — Presence with Redis TTL and heartbeat
-- [x] Phase 5 — Delivery receipts
-- [ ] Phase 6 — Frontend auth UI
-- [ ] Phase 7 — Room list, create room, join by code
-- [ ] Phase 8 — Chat UI with real-time WebSocket messages
-- [ ] Phase 9 — DMs, presence indicators, delivery receipts UI
+## Features
+
+- User registration and login with JWT authentication
+- Create group rooms with auto-generated 6-character join codes
+- Join rooms by code
+- Real-time messaging via WebSocket
+- Direct messaging between users
+- Online presence — Redis TTL-based with 30s heartbeat
+- Delivery receipts — sent → delivered → read
+- Message history with pagination
+- Rate limiting on auth endpoints
+
+## Project Structure
+
+```
+chat-system/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # app entrypoint, router mounts
+│   │   ├── config.py            # pydantic settings, env vars
+│   │   ├── database.py          # async engine, session factory
+│   │   ├── models.py            # SQLAlchemy ORM models
+│   │   ├── schemas.py           # Pydantic request/response models
+│   │   ├── utils.py             # room code generator
+│   │   ├── websockets.py        # connection manager
+│   │   ├── presence.py          # Redis presence functions
+│   │   ├── redis.py             # Redis client factory
+│   │   ├── limiter.py           # rate limiter instance
+│   │   ├── logger.py            # structured logging
+│   │   ├── auth/
+│   │   │   ├── router.py        # /auth endpoints
+│   │   │   ├── service.py       # JWT, bcrypt, user queries
+│   │   │   └── dependencies.py  # get_current_user dependency
+│   │   └── routers/
+│   │       ├── rooms.py         # /rooms endpoints
+│   │       ├── users.py         # /users endpoints
+│   │       ├── dms.py           # /dms endpoints
+│   │       ├── ws.py            # WebSocket endpoint
+│   │       └── service.py       # shared database operations
+│   ├── migrations/              # Alembic schema versions
+│   ├── tests/
+│   ├── docker-compose.yml       # PostgreSQL + Redis
+│   ├── requirements.txt
+│   └── .env.example
+└── frontend/
+├── app/
+│   ├── page.tsx             # root redirect
+│   ├── login/page.tsx       # login page
+│   ├── register/page.tsx    # register page
+│   ├── dashboard/page.tsx   # rooms list
+│   ├── chat/[roomId]/       # chat page
+│   │   └── page.tsx
+│   └── lib/
+│       ├── api.ts           # API and WS base URLs
+│       └── auth.ts          # token management
+└── .env.local.example
+```
 
 ## API Endpoints
 
@@ -78,16 +147,13 @@ online presence, and delivery receipts.
 {
   "id": "uuid",
   "sender_id": "uuid",
+  "sender_username": "ashutosh",
   "content": "hello world",
   "created_at": "2026-05-26T19:51:40.718544+00:00"
 }
 ```
 
-**Receive a heartbeat response:**
-"pong"
-
-## WebSocket close codes
-
+#### WebSocket close codes
 | Code | Meaning |
 |------|---------|
 | 4001 | Unauthorized — invalid or expired token |
@@ -95,16 +161,29 @@ online presence, and delivery receipts.
 
 ## Running locally
 
+### Backend
 ```bash
+cd backend
 docker compose up -d
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 alembic upgrade head
 uvicorn app.main:app --reload
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 API docs at `http://localhost:8000/docs`
 
 ## Environment variables
 
+### Backend `.env`
 | Variable | Description |
 |----------|-------------|
 | DATABASE_URL | PostgreSQL async connection string |
@@ -114,37 +193,36 @@ API docs at `http://localhost:8000/docs`
 | REFRESH_TOKEN_EXPIRE_DAYS | Refresh token TTL (default 7) |
 | REDIS_URL | Redis connection string |
 
-Copy `.env.example` to `.env` and fill in values.
+### Frontend `.env.local`
+| Variable | Description |
+|----------|-------------|
+| NEXT_PUBLIC_API_URL | Backend API URL |
+| NEXT_PUBLIC_WS_URL | WebSocket server URL |
 
-## Project structure
+Copy `.env.example` and `.env.local.example` and fill in values.
+
+## Deployment
+
+Deployed on a DigitalOcean Droplet (Ubuntu 24.04, 1GB RAM, Bangalore).
+
+### Stack on server
+- Nginx — reverse proxy on port 80
+- FastAPI via uvicorn — port 8000, managed by systemd
+- Next.js — port 3000, managed by systemd
+- PostgreSQL + Redis — Docker Compose
+
+### Deploy updates
+```bash
+# on server
+cd /var/www/chat-app
+git pull
+cd backend && source venv/bin/activate && pip install -r requirements.txt
+alembic upgrade head
+systemctl restart chat-backend
+cd ../frontend && npm install && npm run build
+systemctl restart chat-frontend
 ```
-backend/
-├── app/
-│   ├── main.py              # app entrypoint, router mounts
-│   ├── config.py            # pydantic settings, env vars
-│   ├── database.py          # async engine, session factory
-│   ├── models.py            # SQLAlchemy ORM models
-│   ├── schemas.py           # Pydantic request/response models
-│   ├── utils.py             # room code generator
-│   ├── websockets.py        # connection manager
-│   ├── presence.py          # Redis presence functions
-│   ├── redis.py             # Redis client factory
-│   ├── auth/
-│   │   ├── router.py        # /auth endpoints
-│   │   ├── service.py       # JWT, bcrypt, user queries
-│   │   └── dependencies.py  # get_current_user dependency
-│   └── routers/
-│       ├── rooms.py         # /rooms endpoints
-│       ├── users.py         # /users endpoints
-│       ├── dms.py           # /dms endpoints
-│       ├── ws.py            # WebSocket endpoint
-│       └── service.py       # shared database operations
-├── migrations/              # Alembic schema versions
-├── tests/
-├── docker-compose.yml       # PostgreSQL + Redis
-├── requirements.txt
-└── .env.example
-```
+
 ## Design decisions
 
 - UUIDs as primary keys — no sequential ID leakage
@@ -158,3 +236,5 @@ backend/
 - WebSocket only for sending messages — REST is read-only for message history
 - In-memory connection manager — sufficient for single server, Redis Pub/Sub needed for horizontal scaling
 - Delivery receipts — created on WebSocket broadcast, marked read on history fetch
+- Nginx reverse proxy — single entry point, handles WebSocket upgrade headers
+- systemd process management — auto-restart on crash or server reboot
