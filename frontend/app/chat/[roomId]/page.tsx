@@ -13,6 +13,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [connected, setConnected] = useState(false);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -82,7 +83,7 @@ export default function ChatPage() {
           ws.send("ping");
         }
       }, 30000);
-      ws._heartbeat = heartbeat;
+      heartbeat.current = heartbeat; 
     };
 
     ws.onmessage = (event) => {
@@ -97,7 +98,7 @@ export default function ChatPage() {
 
     ws.onclose = () => {
       setConnected(false);
-      if (ws._heartbeat) clearInterval(ws._heartbeat);
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };
 
     wsRef.current = ws;
