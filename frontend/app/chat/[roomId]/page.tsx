@@ -10,13 +10,13 @@ export default function ChatPage() {
   const params = useParams();
   const roomId = params.roomId;
 
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [connected, setConnected] = useState(false);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [roomName, setRoomName] = useState("");
 
   useEffect(() => {
