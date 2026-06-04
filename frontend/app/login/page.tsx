@@ -41,56 +41,129 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="bg-gray-900 p-8 rounded-xl w-full max-w-md">
-        <h1 className="text-2xl font-bold text-white mb-6">Sign in</h1>
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto flex min-h-screen max-w-[1200px]">
+        {/* Left Side */}
+        <div className="hidden flex-1 flex-col justify-center border-r border-stone-100 px-16 lg:flex">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600">
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="white">
+                <path d="M2 3h12v7a2 2 0 01-2 2H6l-3 2v-2H2V3z" />
+              </svg>
+            </div>
 
-        {error && (
-          <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
-              placeholder="you@example.com"
-            />
+            <span className="text-xl font-medium">Convo</span>
           </div>
 
-          <div>
-            <label className="text-sm text-gray-400 mb-1 block">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
-              placeholder="••••••••"
-            />
+          <h1 className="mb-4 text-5xl leading-tight tracking-tight text-stone-900">
+            Welcome
+            <br />
+            back.
+          </h1>
+
+          <p className="mb-10 max-w-md text-lg leading-8 text-stone-500">
+            Continue your conversations, reconnect with your rooms,
+            and stay in sync with your team.
+          </p>
+
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-violet-600" />
+              <span className="text-stone-700">
+                Real-time messaging
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-violet-600" />
+              <span className="text-stone-700">
+                Live presence updates
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-violet-600" />
+              <span className="text-stone-700">
+                Secure JWT authentication
+              </span>
+            </div>
           </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-medium py-3 rounded-lg transition-colors"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+        {/* Right Side */}
+        <div className="flex flex-1 items-center justify-center px-6 py-12">
+          <div className="w-full max-w-md">
+            <div className="mb-8 text-center lg:text-left">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1 text-sm font-medium text-violet-700">
+                Sign in
+              </div>
 
-        <p className="text-gray-400 text-sm mt-6 text-center">
-          Don't have an account?{" "}
-          <a href="/register" className="text-violet-400 hover:underline">
-            Register
-          </a>
-        </p>
+              <h2 className="mb-2 text-3xl font-semibold tracking-tight text-stone-900">
+                Access your account
+              </h2>
+
+              <p className="text-stone-500">
+                Enter your credentials to continue.
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">
+                  Email
+                </label>
+
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-stone-200 px-4 py-3 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-stone-700">
+                  Password
+                </label>
+
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  className="w-full rounded-xl border border-stone-200 px-4 py-3 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-12 w-full items-center justify-center rounded-xl bg-violet-600 font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-stone-500">
+              Don't have an account?{" "}
+              <a
+                href="/register"
+                className="font-medium text-violet-600 hover:text-violet-700"
+              >
+                Create one
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
