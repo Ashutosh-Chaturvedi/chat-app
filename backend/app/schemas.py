@@ -11,6 +11,10 @@ class RoomOut(BaseModel):
     code: str
     is_direct: bool
     created_at: datetime
+    created_by: uuid.UUID
+    member_count: int | None
+    last_message: str | None = None
+    last_activity: datetime | None = None
     
     model_config = {"from_attributes": True}
     
@@ -52,5 +56,12 @@ class TokenPair(BaseModel):
     
 class RefreshRequest(BaseModel):
     refresh_token: str
+    
+class RoomMemberOut(BaseModel):
+    id: uuid.UUID
+    username: str
+    online: bool
+
+    model_config = {"from_attributes": True}
     
     

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, ForeignKey, Text, CheckConstraint, UniqueConstraint, DateTime
+from sqlalchemy import String, ForeignKey, Text, CheckConstraint, UniqueConstraint, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -47,7 +47,8 @@ class Room(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
-
+    
+    member_count: Mapped[int] = mapped_column(default=1, nullable=True)
     members: Mapped[list["RoomMember"]] = relationship(back_populates="room")
     messages: Mapped[list["Message"]] = relationship(back_populates="room")
 
@@ -57,7 +58,7 @@ class RoomMember(Base):
     __table_args__ = (UniqueConstraint("room_id", "user_id"),)
 
     room_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("rooms.id"), primary_key=True
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), primary_key=True
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
@@ -78,7 +79,7 @@ class Message(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     room_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("rooms.id")
+        UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE")
     )
     sender_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id")
@@ -100,7 +101,7 @@ class MessageReceipt(Base):
     )
 
     message_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("messages.id"), primary_key=True
+        UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), primary_key=True
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True

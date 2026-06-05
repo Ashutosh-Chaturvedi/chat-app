@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_URL } from "../lib/api";
 import { setTokens } from "../lib/auth";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,15 +46,20 @@ export default function LoginPage() {
       <div className="mx-auto flex min-h-screen max-w-[1200px]">
         {/* Left Side */}
         <div className="hidden flex-1 flex-col justify-center border-r border-stone-100 px-16 lg:flex">
+          <Link
+            href="/"
+            className="flex items-center gap-3 text-xl font-medium"
+          >
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600">
               <svg width="18" height="18" viewBox="0 0 16 16" fill="white">
                 <path d="M2 3h12v7a2 2 0 01-2 2H6l-3 2v-2H2V3z" />
               </svg>
             </div>
-
-            <span className="text-xl font-medium">Convo</span>
+            <span className="text-xl font-medium">
+              Convo</span>
           </div>
+          </Link>
 
           <h1 className="mb-4 text-5xl leading-tight tracking-tight text-stone-900">
             Welcome

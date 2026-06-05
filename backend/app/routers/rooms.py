@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
 from app.database import get_db
-from app.schemas import RoomCreate, RoomOut, MessageCreate, MessageOut
+from app.schemas import RoomCreate, RoomOut, MessageCreate, MessageOut, RoomMemberOut
 from app.routers import service
 from app.auth.dependencies import get_current_user
 from app.models import User
@@ -57,3 +57,64 @@ async def get_room_messages(
     current_user: User = Depends(get_current_user)       
 ):
     return await service.get_room_message(db, room_id, current_user)
+
+@router.get("/{room_id}/memberCount")
+async def get_member_count(
+    room_id: uuid.UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(Room).where(
+            Room.id == room_id,
+        )
+    )
+    room = result.scalar_one()
+    if room.member_count is None:
+        return 0
+    return room.member_count
+    
+@router.delete("/{room_id}")
+async def delete_room(
+    room_id: uuid.UUID, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user) 
+):
+    result = await service.delete_room(db, room_id, current_user)
+    if result == False:
+        raise HTTPException(status_code=403, detail="Unable to delete")
+    elif result == True:
+        return "room deleted"
+        
+    return result
+
+@router.delete("/{room_id}/users/me")
+async def leave_room(
+    room_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await service.leave_room(
+        db,
+        room_id,
+        current_user
+    )
+
+    if result is False:
+        raise HTTPException(
+            status_code=404,
+            detail="You are not a member of this room"
+        )
+
+    return {"message": "Left room successfully"}
+
+@router.get("/{room_id}/members", response_model=list[RoomMemberOut])
+async def get_room_members(
+    room_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await service.get_room_members(
+        db,
+        room_id
+    )
