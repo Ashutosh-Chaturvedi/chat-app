@@ -1,12 +1,11 @@
-# Chat System
+# Convo — Real-time Chat System
 
 A full-stack real-time chat application built with FastAPI, PostgreSQL, Redis, and Next.js.
 Supports direct messaging and group rooms with message persistence, online presence, and delivery receipts.
 
 ## Live Demo
 
-Frontend: `http://143.110.244.61`
-Backend API: `http://143.110.244.61/api`
+🌐 [chat-app.live](https://chat-app.live)
 
 ## Architecture
 ```
@@ -52,6 +51,7 @@ Redis (Docker) — presence and caching
 - Delivery receipts — sent → delivered → read
 - Message history with pagination
 - Rate limiting on auth endpoints
+- Member list with online/offline status per room
 
 ## Project Structure
 
@@ -91,8 +91,6 @@ chat-system/
 │   ├── login/page.tsx       # login page
 │   ├── register/page.tsx    # register page
 │   ├── dashboard/page.tsx   # rooms list
-│   ├── chat/[roomId]/       # chat page
-│   │   └── page.tsx
 │   └── lib/
 │       ├── api.ts           # API and WS base URLs
 │       └── auth.ts          # token management
@@ -207,20 +205,23 @@ Copy `.env.example` and `.env.local.example` and fill in values.
 Deployed on a DigitalOcean Droplet (Ubuntu 24.04, 1GB RAM, Bangalore).
 
 ### Stack on server
-- Nginx — reverse proxy on port 80
+- Nginx — reverse proxy on port 80/443 with SSL
 - FastAPI via uvicorn — port 8000, managed by systemd
 - Next.js — port 3000, managed by systemd
-- PostgreSQL + Redis — Docker Compose
+- PostgreSQL + Redis — Docker Compose, bound to 127.0.0.1
 
 ### Deploy updates
 ```bash
-# on server
 cd /var/www/chat-app
 git pull
-cd backend && source venv/bin/activate && pip install -r requirements.txt
+cd backend
+source venv/bin/activate
+pip install -r requirements.txt
 alembic upgrade head
 systemctl restart chat-backend
-cd ../frontend && npm install && npm run build
+cd ../frontend
+npm install
+npm run build
 systemctl restart chat-frontend
 ```
 
@@ -239,3 +240,4 @@ systemctl restart chat-frontend
 - Delivery receipts — created on WebSocket broadcast, marked read on history fetch
 - Nginx reverse proxy — single entry point, handles WebSocket upgrade headers
 - systemd process management — auto-restart on crash or server reboot
+- Docker services bound to 127.0.0.1 — PostgreSQL and Redis not exposed to public internet
