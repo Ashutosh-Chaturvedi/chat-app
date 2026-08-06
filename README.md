@@ -3,10 +3,6 @@
 A full-stack real-time chat application built with FastAPI, PostgreSQL, Redis, and Next.js.
 Supports direct messaging and group rooms with message persistence, online presence, and delivery receipts.
 
-## Live Demo
-
-🌐 [chat-app.live](https://chat-app.live)
-
 ## Architecture
 ```
 Internet
