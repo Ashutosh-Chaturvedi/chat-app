@@ -1,13 +1,17 @@
 # Convo — Real-time Chat System
 
-A full-stack real-time chat application built with FastAPI, PostgreSQL, Redis, and Next.js.
-Supports direct messaging and group rooms with message persistence, online presence, and delivery receipts.
+A full-stack real-time chat application built with FastAPI, PostgreSQL, Redis, and Next.js. Supports direct messaging and group rooms with message persistence, online presence, and delivery receipts.
+
+Live at **[chat-app.live](https://chat-app.live)**
+
+---
 
 ## Architecture
+
 ```
 Internet
 ↓
-Nginx (port 80) — reverse proxy
+Nginx (port 80/443) — reverse proxy + SSL termination
 ├── Frontend (Next.js, port 3000)
 ├── Backend API (FastAPI, port 8000)
 └── WebSocket (FastAPI, port 8000)
@@ -20,7 +24,9 @@ Redis (Docker) — presence and caching
 - **Auth**: JWT-based stateless auth with access/refresh token pair
 - **Storage**: PostgreSQL for persistence, Redis for presence and sessions
 - **Schema**: DMs modeled as rooms with 2 members — unified message storage
-- **Deployment**: DigitalOcean Droplet, Ubuntu 24.04, systemd process management
+- **Deployment**: Azure VM (Standard_B2als_v2), Ubuntu 24.04, systemd process management
+
+---
 
 ## Stack
 
@@ -36,6 +42,8 @@ Redis (Docker) — presence and caching
 - Native WebSocket API
 - localStorage for token management
 
+---
+
 ## Features
 
 - User registration and login with JWT authentication
@@ -48,6 +56,9 @@ Redis (Docker) — presence and caching
 - Message history with pagination
 - Rate limiting on auth endpoints
 - Member list with online/offline status per room
+- Responsive UI — mobile and desktop
+
+---
 
 ## Project Structure
 
@@ -82,62 +93,73 @@ chat-system/
 │   ├── requirements.txt
 │   └── .env.example
 └── frontend/
-├── app/
-│   ├── page.tsx             # root redirect
-│   ├── login/page.tsx       # login page
-│   ├── register/page.tsx    # register page
-│   ├── dashboard/page.tsx   # rooms list
-│   └── lib/
-│       ├── api.ts           # API and WS base URLs
-│       └── auth.ts          # token management
-└── .env.local.example
+    ├── app/
+    │   ├── page.tsx             # landing page
+    │   ├── login/page.tsx       # login page
+    │   ├── register/page.tsx    # register page
+    │   ├── dashboard/page.tsx   # rooms list + chat
+    │   └── lib/
+    │       ├── api.ts           # API and WS base URLs
+    │       └── auth.ts          # token management
+    └── .env.local.example
 ```
+
+---
 
 ## API Endpoints
 
 ### Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /auth/register | Register a new user |
-| POST | /auth/login | Login, get token pair |
-| POST | /auth/refresh | Refresh access token |
-| GET | /auth/me | Get current user |
+
+| Method | Endpoint        | Description              |
+|--------|-----------------|--------------------------|
+| POST   | /auth/register  | Register a new user      |
+| POST   | /auth/login     | Login, get token pair    |
+| POST   | /auth/refresh   | Refresh access token     |
+| GET    | /auth/me        | Get current user         |
 
 ### Rooms
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /rooms/ | Create a group room |
-| POST | /rooms/{room_code}/members | Join a room by code |
-| GET | /rooms/{room_id}/messages | Fetch message history |
+
+| Method | Endpoint                      | Description              |
+|--------|-------------------------------|--------------------------|
+| POST   | /rooms/                       | Create a group room      |
+| POST   | /rooms/{room_code}/members    | Join a room by code      |
+| GET    | /rooms/{room_id}/messages     | Fetch message history    |
 
 ### Users
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /users/ | List all users |
-| GET | /users/me/rooms | List my rooms |
-| GET | /users/{user_id} | Get user details |
-| GET | /users/{user_id}/presence | Check online status |
+
+| Method | Endpoint                      | Description              |
+|--------|-------------------------------|--------------------------|
+| GET    | /users/                       | List all users           |
+| GET    | /users/me/rooms               | List my rooms            |
+| GET    | /users/{user_id}              | Get user details         |
+| GET    | /users/{user_id}/presence     | Check online status      |
 
 ### DMs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /dms/{user_id} | Initiate or get DM |
-| GET | /dms/{user_id}/messages | Fetch DM history |
+
+| Method | Endpoint                      | Description              |
+|--------|-------------------------------|--------------------------|
+| POST   | /dms/{user_id}                | Initiate or get DM       |
+| GET    | /dms/{user_id}/messages       | Fetch DM history         |
 
 ### WebSocket
-| Endpoint | Description |
-|----------|-------------|
-| WS /ws/{room_id}?token= | Connect to room, send/receive messages |
 
-#### WebSocket message format
+| Endpoint                        | Description                          |
+|---------------------------------|--------------------------------------|
+| WS /ws/{room_id}?token=         | Connect to room, send/receive messages |
 
-**Send a message:**
+**WebSocket message format**
+
+Send a message:
+```
 "hello world"
+```
 
-**Send a heartbeat:**
+Send a heartbeat:
+```
 "ping"
+```
 
-**Receive a message:**
+Receive a message:
 ```json
 {
   "id": "uuid",
@@ -148,15 +170,19 @@ chat-system/
 }
 ```
 
-#### WebSocket close codes
-| Code | Meaning |
-|------|---------|
-| 4001 | Unauthorized — invalid or expired token |
-| 4003 | Forbidden — not a member of this room |
+**WebSocket close codes**
 
-## Running locally
+| Code | Meaning                                      |
+|------|----------------------------------------------|
+| 4001 | Unauthorized — invalid or expired token      |
+| 4003 | Forbidden — not a member of this room        |
+
+---
+
+## Running Locally
 
 ### Backend
+
 ```bash
 cd backend
 docker compose up -d
@@ -168,72 +194,124 @@ uvicorn app.main:app --reload
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-API docs at `http://localhost:8000/docs`
+API docs at http://localhost:8000/docs
 
-## Environment variables
+---
+
+## Environment Variables
 
 ### Backend `.env`
-| Variable | Description |
-|----------|-------------|
-| DATABASE_URL | PostgreSQL async connection string |
-| SECRET_KEY | JWT signing key — generate with `openssl rand -hex 32` |
-| ALGORITHM | JWT algorithm (HS256) |
-| ACCESS_TOKEN_EXPIRE_MINUTES | Access token TTL (default 15) |
-| REFRESH_TOKEN_EXPIRE_DAYS | Refresh token TTL (default 7) |
-| REDIS_URL | Redis connection string |
+
+| Variable                      | Description                                          |
+|-------------------------------|------------------------------------------------------|
+| DATABASE_URL                  | PostgreSQL async connection string (postgresql+asyncpg://) |
+| SECRET_KEY                    | JWT signing key — generate with `openssl rand -hex 32` |
+| ALGORITHM                     | JWT algorithm (HS256)                                |
+| ACCESS_TOKEN_EXPIRE_MINUTES   | Access token TTL (default 15)                        |
+| REFRESH_TOKEN_EXPIRE_DAYS     | Refresh token TTL (default 7)                        |
+| REDIS_URL                     | Redis connection string                              |
 
 ### Frontend `.env.local`
-| Variable | Description |
-|----------|-------------|
-| NEXT_PUBLIC_API_URL | Backend API URL |
-| NEXT_PUBLIC_WS_URL | WebSocket server URL |
+
+| Variable                | Description            |
+|-------------------------|------------------------|
+| NEXT_PUBLIC_API_URL     | Backend API URL        |
+| NEXT_PUBLIC_WS_URL      | WebSocket server URL   |
 
 Copy `.env.example` and `.env.local.example` and fill in values.
 
+---
+
 ## Deployment
 
-Deployed on a DigitalOcean Droplet (Ubuntu 24.04, 1GB RAM, Bangalore).
+Deployed on **Azure Virtual Machine** (Standard_B2als_v2, 2 vCPU, 4GB RAM, Central India) running Ubuntu 24.04 LTS. Domain managed via Name.com, SSL via Let's Encrypt.
 
 ### Stack on server
-- Nginx — reverse proxy on port 80/443 with SSL
-- FastAPI via uvicorn — port 8000, managed by systemd
-- Next.js — port 3000, managed by systemd
-- PostgreSQL + Redis — Docker Compose, bound to 127.0.0.1
+
+- **Nginx** — reverse proxy on port 80/443, SSL termination, HTTP→HTTPS redirect
+- **FastAPI** via uvicorn — port 8000, managed by systemd (`chatapp.service`)
+- **Next.js** — port 3000, managed by systemd (`chatapp-frontend.service`)
+- **PostgreSQL + Redis** — Docker Compose, bound to 127.0.0.1 (not exposed publicly)
+
+### Initial server setup
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y docker.io docker-compose nginx certbot python3-certbot-nginx git python3-pip python3-venv nodejs npm
+sudo usermod -aG docker $USER
+newgrp docker
+```
 
 ### Deploy updates
+
 ```bash
-cd /var/www/chat-app
+ssh -i convo_key.pem azureuser@<vm-ip>
+
+cd ~/chat-app
 git pull
+
+# Backend
 cd backend
 source venv/bin/activate
 pip install -r requirements.txt
+export $(cat app/.env | xargs)
 alembic upgrade head
-systemctl restart chat-backend
+sudo systemctl restart chatapp
+
+# Frontend
 cd ../frontend
 npm install
 npm run build
-systemctl restart chat-frontend
+sudo systemctl restart chatapp-frontend
 ```
 
-## Design decisions
+### systemd services
 
-- UUIDs as primary keys — no sequential ID leakage
-- Timezone-aware timestamps throughout (`TIMESTAMPTZ`)
-- Password pre-hashed with SHA-256 before bcrypt — avoids 72-byte truncation
-- Refresh tokens are the revocation point — access tokens are short-lived (15min)
-- DMs modeled as rooms with `is_direct=True` — unified message storage, no duplicate logic
-- Room join codes — 6 character alphanumeric, auto-generated on room creation
-- Offset pagination on user listing — limit/offset with default limit of 50
-- Presence via Redis TTL — heartbeat every 30s, TTL of 90s, no background cleanup needed
-- WebSocket only for sending messages — REST is read-only for message history
-- In-memory connection manager — sufficient for single server, Redis Pub/Sub needed for horizontal scaling
-- Delivery receipts — created on WebSocket broadcast, marked read on history fetch
-- Nginx reverse proxy — single entry point, handles WebSocket upgrade headers
-- systemd process management — auto-restart on crash or server reboot
-- Docker services bound to 127.0.0.1 — PostgreSQL and Redis not exposed to public internet
+```bash
+# Check status
+sudo systemctl status chatapp
+sudo systemctl status chatapp-frontend
+
+# View logs
+sudo journalctl -u chatapp -n 50
+sudo journalctl -u chatapp-frontend -n 50
+
+# Restart
+sudo systemctl restart chatapp
+sudo systemctl restart chatapp-frontend
+```
+
+### Docker services
+
+```bash
+cd ~/chat-app/backend
+docker-compose ps
+docker-compose restart
+```
+
+---
+
+## Design Decisions
+
+- **UUIDs as primary keys** — no sequential ID leakage
+- **Timezone-aware timestamps** throughout (TIMESTAMPTZ)
+- **Password pre-hashed with SHA-256 before bcrypt** — avoids 72-byte truncation
+- **Refresh tokens are the revocation point** — access tokens are short-lived (15min)
+- **DMs modeled as rooms** with `is_direct=True` — unified message storage, no duplicate logic
+- **Room join codes** — 6 character alphanumeric, auto-generated on room creation
+- **Offset pagination** on user listing — limit/offset with default limit of 50
+- **Presence via Redis TTL** — heartbeat every 30s, TTL of 90s, no background cleanup needed
+- **WebSocket only for sending messages** — REST is read-only for message history
+- **In-memory connection manager** — sufficient for single server, Redis Pub/Sub needed for horizontal scaling
+- **Delivery receipts** — created on WebSocket broadcast, marked read on history fetch
+- **Nginx reverse proxy** — single entry point, handles WebSocket upgrade headers
+- **systemd process management** — auto-restart on crash or server reboot
+- **Docker services bound to 127.0.0.1** — PostgreSQL and Redis not exposed to public internet
+- **PostgreSQL and Redis ports bound to localhost** — learned from a prior Redis misconfiguration that exposed port 6379 publicly
